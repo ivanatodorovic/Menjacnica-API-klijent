@@ -14,6 +14,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import menjacnica.Drzava;
+import menjacnica.Valuta;
 import menjacnica.util.URLConnectionUtil;
 
 import java.awt.Frame;
@@ -23,10 +24,13 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.JButton;
 import javax.swing.DefaultComboBoxModel;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class MenjacnicaGUI extends JFrame {
 
@@ -104,10 +108,56 @@ public class MenjacnicaGUI extends JFrame {
 		textFieldUValutuZemlje.setColumns(10);
 		
 		JButton btnKonvertuj = new JButton("Konvertuj");
+		btnKonvertuj.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String zahtev = vratiCurrencyId(comboBoxIzValuteZemlje.getSelectedItem().toString()) + "_" + vratiCurrencyId(comboBoxUValutuZemlje.getSelectedItem().toString());
+				String url = "http://free.currencyconverterapi.com/api/v3/convert?q=";
+				url += zahtev;
+				
+				try {
+					String sadrzaj = URLConnectionUtil.getContent(url);
+					JsonParser jsPraser = new JsonParser();
+					JsonObject jsObj =  jsPraser.parse(sadrzaj).getAsJsonObject().getAsJsonObject("results").getAsJsonObject(zahtev);
+					Gson gson = new GsonBuilder().create();
+					Valuta valuta = gson.fromJson(jsObj, Valuta.class); 
+					if(valuta != null) {
+						konvertuj(valuta.getVal());
+						
+					}else {
+						JOptionPane.showMessageDialog(contentPane, "Nije pronadjen zahtev: "+zahtev, "ERROR", JOptionPane.ERROR_MESSAGE);
+					}
+					
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+			}
+		});
 		btnKonvertuj.setBounds(163, 216, 89, 23);
 		contentPane.add(btnKonvertuj);
 	}
 
+	private String vratiCurrencyId(String ime) {
+		for (int i = 0; i < drzave.size(); i++) {
+			if(drzave.get(i).getName().equals(ime))
+				return drzave.get(i).getCurrencyId();
+		
+		}
+		return null;
+	}
+	
+	private void konvertuj(double val) {
+		try {
+			double iznosKojiKovertujemo = Double.parseDouble(textFieldIzValuteZemlje.getText());	
+		textFieldUValutuZemlje.setText(iznosKojiKovertujemo * val +"");
+		} catch (NumberFormatException e) {
+			JOptionPane.showMessageDialog(contentPane, "Treba uneti broj! ", "ERROR", JOptionPane.ERROR_MESSAGE);	
+		}
+		
+		
+		
+	}
+	
 	private String[] drzave() {
 	try {
 		String sadrzaj = URLConnectionUtil.getContent("http://free.currencyconverterapi.com/api/v3/countries");

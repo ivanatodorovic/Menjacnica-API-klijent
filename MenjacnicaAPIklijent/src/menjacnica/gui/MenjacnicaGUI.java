@@ -2,6 +2,7 @@ package menjacnica.gui;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.awt.Font;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -17,6 +18,9 @@ import com.google.gson.JsonParser;
 import menjacnica.Drzava;
 import menjacnica.Konverzija;
 import menjacnica.Valuta;
+import menjacnica.sistemskeoperacije.SOSacuvajKonverziju;
+import menjacnica.sistemskeoperacije.SOUcitajKonverziju;
+import menjacnica.sistemskeoperacije.SOVratiDrzave;
 import menjacnica.util.URLConnectionUtil;
 
 import java.awt.Frame;
@@ -41,208 +45,131 @@ import java.awt.event.ActionEvent;
 public class MenjacnicaGUI extends JFrame {
 
 	private JPanel contentPane;
-	private JTextField textFieldIzValuteZemlje;
-	private JTextField textFieldUValutuZemlje;
+	private JLabel lblIzValuteZemlje;
+	public JComboBox IzValuteComboBox;
+	private JLabel lblUValutuZemlje;
+	public JComboBox UValutuComboBox;
+	private JLabel lblIznos;
+	private JLabel label;
+	private JTextField IzValuteTextField;
+	private JTextField UValutuTextField;
+	private JButton btnKonvertuj;
 
-	private LinkedList<Drzava> drzave = new LinkedList<Drzava>();
+	public LinkedList<Drzava> drzave = new LinkedList<Drzava>(); 
+	public String[] nizZemalja;
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					MenjacnicaGUI frame = new MenjacnicaGUI();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
-	/**
-	 * Create the frame.
-	 */
 	public MenjacnicaGUI() {
-		setFont(null);
+
+		nizZemalja = GUIKontroler.vratiDrzave(drzave);
 		setResizable(false);
 		setTitle("Menjacnica");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 426, 300);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
+		contentPane.add(getLblIzValuteZemlje());
+		contentPane.add(getIzValuteComboBox());
+		contentPane.add(getLblUValutuZemlje());
+		contentPane.add(getUValutuComboBox());
+		contentPane.add(getLblIznos());
+		contentPane.add(getLabel());
+		contentPane.add(getIzValuteTextField());
+		contentPane.add(getUValutuTextField());
+		contentPane.add(getBtnKonvertuj());
+		setLocationRelativeTo(null);
 
-		String[] naziviDrzava = drzave();
+	}
 
-		JLabel lblIzValuteZemlje = new JLabel("Iz valute zemlje:");
-		lblIzValuteZemlje.setBounds(53, 46, 87, 14);
-		contentPane.add(lblIzValuteZemlje);
+	private JLabel getLblIzValuteZemlje() {
+		if (lblIzValuteZemlje == null) {
+			lblIzValuteZemlje = new JLabel("Iz valute zemlje:");
+			lblIzValuteZemlje.setFont(new Font("Yu Gothic UI Semilight", Font.PLAIN, 18));
+			lblIzValuteZemlje.setBounds(59, 32, 162, 36);
+		}
+		return lblIzValuteZemlje;
+	}
 
-		JLabel lblUValutuZemlje = new JLabel("U valutu zemlje: ");
-		lblUValutuZemlje.setBounds(239, 46, 87, 14);
-		contentPane.add(lblUValutuZemlje);
+	public JComboBox getIzValuteComboBox() {
+		if (IzValuteComboBox == null) {
 
-		JLabel lblIznos = new JLabel("Iznos:");
-		lblIznos.setBounds(53, 116, 55, 14);
-		contentPane.add(lblIznos);
+			IzValuteComboBox = new JComboBox();
+			IzValuteComboBox.setBounds(59, 79, 122, 20);
+			IzValuteComboBox.setModel(new DefaultComboBoxModel(nizZemalja));
+		}
+		return IzValuteComboBox;
+	}
 
-		JLabel lblIznos_1 = new JLabel("Iznos:");
-		lblIznos_1.setBounds(239, 116, 46, 14);
-		contentPane.add(lblIznos_1);
+	public JLabel getLblUValutuZemlje() {
+		if (lblUValutuZemlje == null) {
+			lblUValutuZemlje = new JLabel("U valutu zemlje:");
+			lblUValutuZemlje.setFont(new Font("Yu Gothic UI Semilight", Font.PLAIN, 18));
+			lblUValutuZemlje.setBounds(231, 37, 162, 26);
 
-		JComboBox comboBoxIzValuteZemlje = new JComboBox();
-		comboBoxIzValuteZemlje.setModel(new DefaultComboBoxModel(naziviDrzava));
-		comboBoxIzValuteZemlje.setBounds(53, 71, 102, 20);
-		contentPane.add(comboBoxIzValuteZemlje);
+		}
+		return lblUValutuZemlje;
+	}
 
-		JComboBox comboBoxUValutuZemlje = new JComboBox();
-		comboBoxUValutuZemlje.setModel(new DefaultComboBoxModel(naziviDrzava));
-		comboBoxUValutuZemlje.setBounds(239, 71, 102, 20);
-		contentPane.add(comboBoxUValutuZemlje);
+	public JComboBox getUValutuComboBox() {
+		if (UValutuComboBox == null) {
+			UValutuComboBox = new JComboBox();
+			UValutuComboBox.setBounds(231, 79, 122, 20);
+			UValutuComboBox.setModel(new DefaultComboBoxModel(nizZemalja));
+		}
+		return UValutuComboBox;
+	}
 
-		textFieldIzValuteZemlje = new JTextField();
-		textFieldIzValuteZemlje.setBounds(53, 154, 86, 20);
-		contentPane.add(textFieldIzValuteZemlje);
-		textFieldIzValuteZemlje.setColumns(10);
+	private JLabel getLblIznos() {
+		if (lblIznos == null) {
+			lblIznos = new JLabel("Iznos:");
+			lblIznos.setFont(new Font("Yu Gothic UI Semilight", Font.PLAIN, 18));
+			lblIznos.setBounds(231, 110, 122, 26);
+		}
+		return lblIznos;
+	}
 
-		textFieldUValutuZemlje = new JTextField();
-		textFieldUValutuZemlje.setBounds(239, 154, 86, 20);
-		contentPane.add(textFieldUValutuZemlje);
-		textFieldUValutuZemlje.setColumns(10);
+	private JLabel getLabel() {
+		if (label == null) {
+			label = new JLabel("Iznos:");
+			label.setFont(new Font("Yu Gothic UI Semilight", Font.PLAIN, 18));
+			label.setBounds(59, 110, 122, 26);
+		}
+		return label;
+	}
 
-		JButton btnKonvertuj = new JButton("Konvertuj");
-		btnKonvertuj.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				String zahtev = vratiCurrencyId(comboBoxIzValuteZemlje.getSelectedItem().toString()) + "_"
-						+ vratiCurrencyId(comboBoxUValutuZemlje.getSelectedItem().toString());
-				String url = "http://free.currencyconverterapi.com/api/v3/convert?q=";
-				url += zahtev;
+	public JTextField getIzValuteTextField() {
+		if (IzValuteTextField == null) {
+			IzValuteTextField = new JTextField();
+			IzValuteTextField.setBounds(59, 147, 122, 20);
+			IzValuteTextField.setColumns(10);
+		}
+		return IzValuteTextField;
+	}
 
-				try {
-					String sadrzaj = URLConnectionUtil.getContent(url);
-					JsonParser jsPraser = new JsonParser();
-					JsonObject jsObj = jsPraser.parse(sadrzaj).getAsJsonObject().getAsJsonObject("results")
-							.getAsJsonObject(zahtev);
-					Gson gson = new GsonBuilder().create();
-					Valuta valuta = gson.fromJson(jsObj, Valuta.class);
-					if (valuta != null) {
-						konvertuj(valuta.getVal());
-						sacuvajKonverziju(zahtev, valuta.getVal(), "data/log.json");
-					} else {
-						JOptionPane.showMessageDialog(contentPane, "Nije pronadjen zahtev: " + zahtev, "ERROR",
-								JOptionPane.ERROR_MESSAGE);
-					}
+	public JTextField getUValutuTextField() {
+		if (UValutuTextField == null) {
+			UValutuTextField = new JTextField();
+			UValutuTextField.setBounds(231, 147, 122, 20);
+			UValutuTextField.setColumns(10);
+		}
+		return UValutuTextField;
+	}
 
-				} catch (IOException e) {
-					e.printStackTrace();
+	private JButton getBtnKonvertuj() {
+		if (btnKonvertuj == null) {
+			btnKonvertuj = new JButton("Konvertuj");
+			btnKonvertuj.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+
+					GUIKontroler.konvertovanje();
+
 				}
 
-			}
-
-		});
-		btnKonvertuj.setBounds(163, 216, 89, 23);
-		contentPane.add(btnKonvertuj);
-	}
-
-	private LinkedList<Konverzija> ucitajKonverziju(String path) {
-		LinkedList<Konverzija> lista = new LinkedList<Konverzija>();
-
-		try {
-			FileReader reader = new FileReader(path);
-			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-			JsonArray array = gson.fromJson(reader, JsonArray.class);
-			if (array == null)
-				return null;
-			for (int i = 0; i < array.size(); i++) {
-				lista.add(gson.fromJson(array.get(i), Konverzija.class));
-			}
-
-		} catch (FileNotFoundException e) {
-
-			System.out.println("Kreiran fajl");
+			});
+			btnKonvertuj.setBounds(147, 205, 122, 23);
 		}
-
-		return lista;
+		return btnKonvertuj;
 	}
 
-	private void sacuvajKonverziju(String zahtev, double kurs, String path) {
-		LinkedList<Konverzija> lista = ucitajKonverziju(path);
-		Konverzija konverzija = new Konverzija();
-		konverzija.setIzValuta(zahtev.split("_")[0]);
-		konverzija.setuValuta(zahtev.split("_")[1]);
-		konverzija.setKurs(kurs);
-		konverzija.setDatumVreme(new GregorianCalendar().getTime().toString());
-		if (lista == null)
-			lista = new LinkedList<Konverzija>();
-		lista.add(konverzija);
-
-		try {
-			FileWriter writer = new FileWriter(path);
-			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-			gson.toJson(lista, writer);
-			writer.close();
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-
-	}
-
-	private String vratiCurrencyId(String ime) {
-		for (int i = 0; i < drzave.size(); i++) {
-			if (drzave.get(i).getName().equals(ime))
-				return drzave.get(i).getCurrencyId();
-
-		}
-		return null;
-	}
-
-	private void konvertuj(double val) {
-		try {
-			double iznosKojiKovertujemo = Double.parseDouble(textFieldIzValuteZemlje.getText());
-			textFieldUValutuZemlje.setText(iznosKojiKovertujemo * val + "");
-		} catch (NumberFormatException e) {
-			JOptionPane.showMessageDialog(contentPane, "Treba uneti broj! ", "ERROR", JOptionPane.ERROR_MESSAGE);
-		}
-
-	}
-
-	private String[] drzave() {
-		try {
-			String sadrzaj = URLConnectionUtil.getContent("http://free.currencyconverterapi.com/api/v3/countries");
-
-			Gson gson = new GsonBuilder().create();
-			JsonParser jsParser = new JsonParser();
-			JsonObject jsObj = jsParser.parse(sadrzaj).getAsJsonObject().getAsJsonObject("results");
-
-			for (Map.Entry<String, JsonElement> entry : jsObj.entrySet()) {
-				Drzava drzava = gson.fromJson(entry.getValue(), Drzava.class);
-				drzave.add(drzava);
-			}
-			String[] naziviDrzava = vratiNazive(drzave);
-
-			return naziviDrzava;
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
-	private String[] vratiNazive(LinkedList<Drzava> drzave) {
-		String[] niz = new String[drzave.size()];
-		int br = 0;
-		for (int i = 0; i < drzave.size(); i++) {
-			niz[br] = drzave.get(i).getName();
-			br++;
-		}
-		return niz;
-	}
 }
